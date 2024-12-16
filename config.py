@@ -4,93 +4,109 @@ import math
 
 class Config():
     def __init__(self) -> None:
-        self.optimizer = ['Adam', 'AdamW', 'SGD'][2]
-        self.batch_size = 2
-        self.lr = 0.05  # 1e-5 * math.sqrt(self.batch_size / 5)  # adapt the lr linearly
+        #### BASIC settings  ####
+        # PATH settings
+        # Make up your file system as: SYS_HOME_DIR/codes, SYS_HOME_DIR/datasets/dis/xx, SYS_HOME_DIR/saved_model/xx
+        self.sys_home_dir = [os.path.expanduser('~'), '/maqi/DTJImPart'][1]
+        self.data_root_dir = os.path.join(self.sys_home_dir, 'datasets')
+        # self.weights_root_dir = os.path.join(self.sys_home_dir, 'saved_model')
+
+        # datasets settings
+        self.task = ['DIS5K', 'COD', 'HRSOD', 'General', 'General-2K', 'Matting'][0]
+        self.testsets = {
+            # Benchmarks
+            'DIS5K': ','.join(['DIS-VD', 'DIS-TE1', 'DIS-TE2', 'DIS-TE3', 'DIS-TE4'][:1]),
+            'COD': ','.join(['CHAMELEON', 'NC4K', 'TE-CAMO', 'TE-COD10K']),
+            'HRSOD': ','.join(['DAVIS-S', 'TE-HRSOD', 'TE-UHRSD', 'DUT-OMRON', 'TE-DUTS']),
+            # Practical use
+            'General': ','.join(['DIS-VD', 'TE-P3M-500-NP']),
+            'General-2K': ','.join(['DIS-VD', 'TE-P3M-500-NP']),
+            'Matting': ','.join(['TE-P3M-500-NP', 'TE-AM-2k']),
+        }[self.task]
+        datasets_all = '+'.join([ds for ds in (os.listdir(os.path.join(self.data_root_dir, self.task)) if os.path.isdir(os.path.join(self.data_root_dir, self.task)) else []) if ds not in self.testsets.split(',')])
+        self.training_set = {
+            'DIS5K': ['DIS-TR', 'DIS-TR+DIS-TE1+DIS-TE2+DIS-TE3+DIS-TE4'][0],
+            'COD': 'TR-COD10K+TR-CAMO',
+            'HRSOD': ['TR-DUTS', 'TR-HRSOD', 'TR-UHRSD', 'TR-DUTS+TR-HRSOD', 'TR-DUTS+TR-UHRSD', 'TR-HRSOD+TR-UHRSD', 'TR-DUTS+TR-HRSOD+TR-UHRSD'][5],
+            'General': datasets_all,
+            'General-2K': datasets_all,
+            'Matting': datasets_all,
+        }[self.task]
+        
+        # MODEL settings
+        self.model = ['ISNet', 'UDUN', 'BiRefNet', 'ISNet_GTEncoder', 'MVANet'][2]
+        
+        # TRAIN settings
+        self.batch_size = 1  # MVANet' batch size can only be 1
+        self.optimizer = {
+            'BiRefNet': 'AdamW',
+            'ISNet_GTEncoder': 'Adam',
+            'UDUN': 'SGD',
+            'ISNet': 'Adam',
+            'MVANet': 'Adam',
+        }[self.model]
+        self.lr = {
+            'BiRefNet': (1e-4 if 'DIS5K' in self.task else 1e-5) * math.sqrt(self.batch_size / 4),
+            'ISNet_GTEncoder': 1e-3,
+            'UDUN': 0.05,
+            'ISNet': 1e-3,
+            'MVANet': 1e-5,
+        }[self.model] # learning rate
         self.lr_decay_epochs = [1e4]  # Set to negative N to decay the lr in the last N-th epoch.
         self.lr_decay_rate = 0.5
-
+        self.size = (512, 512)  # input size
+        self.preproc_methods = ['enhance', 'rotate', 'pepper', 'flip', 'crop'][:3] # data enhance method
+        self.load_all = False  # Turn it on/off by your case. It may consume a lot of CPU memory but accelerate train by loading whole dataset at once
+        
+        self.backbone_weights = { # dir you download the backbone_weights
+            'swin_v1_t': '../backbone_weights/birefnet/swin_tiny_patch4_window7_224_22kto1k_finetune.pth',
+            'swin_v1_b': '../backbone_weights/mvanet/swin_base_patch4_window12_384_22kto1k.pth',
+            'resnet50': '../backbone_weights/udun/resnet50.pkl',
+            'gt_encoder': '../backbone_weights/isnet/ep2.pkl'
+        }
+        # EVAL settings
+        self.batch_size_valid = 1
+        self.only_S_MAE = False # Turn it on for only evaluating Smeausre and MAE
+        
+        ####  Settings that vary depending on the model  ####
+        # BiRefNet settings
+        self.save_last = 20 
+        self.save_step = 5 # save the weights starting from the last 20 epochs, and save every 5 epochs
+        self.lambdas_birefnet = { # 10 types loss function
+                # not 0 means opening this loss
+                'bce': 30 * 1,          
+                'bce_logits': 1 * 0,    # bce with sigmoid
+                'iou': 0.5 * 1,         
+                'iou_patch': 0.5 * 0,   # win_size = (64, 64)
+                'mae': 30 * 0,
+                'mse': 30 * 0,         # can smooth the saliency map
+                'reg': 100 * 0,
+                'ssim': 10 * 1,        # help contours
+                'cnt': 5 * 0,          # help contours
+                'structure': 5 * 0,    # structure loss from MVANet. wbce + wiou
+        }
         self.lambdas_cls = {
             'ce': 5.0
         }
-        # Loss
-        self.lambdas_gt_encoder = {
-            # not 0 means opening this loss
-            'bce': 1 * 1,  # high performance
-            'iou': 0.5 * 0,  # 0 / 255
-            'iou_patch': 0.5 * 0,  # 0 / 255, win_size = (64, 64)
-            'mse': 150 * 0,  # can smooth the saliency map
-            'triplet': 3 * 0,
-            'reg': 100 * 0,
-            'ssim': 10 * 0,  # help contours,
-            'cnt': 5 * 0,  # help contours
-        }
-        self.lambdas_isnet_1 = {
-            # not 0 means opening this loss
-            'bce': 1 * 1,  # high performance
-            'iou': 0.5 * 0,  # 0 / 255
-            'iou_patch': 0.5 * 0,  # 0 / 255, win_size = (64, 64)
-            'mse': 1 * 0,  # can smooth the saliency map
-            'triplet': 3 * 0,
-            'reg': 100 * 0,
-            'ssim': 10 * 0,  # help contours,
-            'cnt': 5 * 0,  # help contours
-        }
-        self.lambdas_isnet_2 = {
-            # not 0 means opening this loss
-            'bce': 1 * 0,  # high performance
-            'iou': 0.5 * 0,  # 0 / 255
-            'iou_patch': 0.5 * 0,  # 0 / 255, win_size = (64, 64)
-            'mse': 1 * 1,  # can smooth the saliency map
-            'triplet': 3 * 0,
-            'reg': 100 * 0,
-            'ssim': 10 * 0,  # help contours,
-            'cnt': 5 * 0,  # help contours
-        }
-        self.lambdas_pix_last = {
-            # not 0 means opening this loss
-            # original rate -- 1 : 30 : 1.5 : 0.2, bce x 30
-            'bce': 30 * 1,  # high performance
-            'iou': 0.5 * 1,  # 0 / 255
-            'iou_patch': 0.5 * 0,  # 0 / 255, win_size = (64, 64)
-            'mse': 150 * 0,  # can smooth the saliency map
-            'triplet': 3 * 0,
-            'reg': 100 * 0,
-            'ssim': 10 * 1,  # help contours,
-            'cnt': 5 * 0,  # help contours
-        }
-        self.lambdas_udun = {
-            # not 0 means opening this loss
-            # original rate -- 1 : 30 : 1.5 : 0.2, bce x 30
-            'bce': 1 * 0,  # high performance
-            'iou': 1 * 1,  # 0 / 255
-            'iou_patch': 0.5 * 0,  # 0 / 255, win_size = (64, 64)
-            'mse': 150 * 0,  # can smooth the saliency map
-            'triplet': 3 * 0,
-            'reg': 100 * 0,
-            'ssim': 10 * 0,  # help contours,
-            'cnt': 5 * 0,  # help contours
-        }
-        self.resnet50_weight = "saved_model/udun/resnet50-19c8e357.pth"
-        self.udun_weight = "../saved_model/udun/udun-trained-R50.pth"
-        self.birefnet_weight = "../saved_model/birefnet/BiRefNet_DIS_ep500-swin_v1_tiny.pth"
-        self.birefnet_weight_2 = "../saved_model/birefnet/ep200.pth"
-        self.isnet_weight = "../saved_model/isnet/isnet.pth"
-        self.model = 'UDUN'
-        self.data_root_dir = '../../datasets/dis'
-        self.task = 'DIS5K'
-        self.dataset = 'DIS5K'
-        self.eval_model = 'birefnet'
-        self.verbose_eval = True
-
+        self.finetune_last_epochs = [
+            0,
+            {
+                'DIS5K': -20,
+                'COD': -20,
+                'HRSOD': -20,
+                'General': -40,
+                'General-2K': -20,
+                'Matting': -20,
+            }[self.task]
+        ][1]    # choose 0 to skip
         self.ms_supervision = True
-        self.out_ref = self.ms_supervision and False
+        self.out_ref = self.ms_supervision and True
         self.dec_ipt = True
         self.dec_ipt_split = True
         self.dec_blk = ['BasicDecBlk', 'ResBlk', 'HierarAttDecBlk'][0]
         self.lat_blk = ['BasicLatBlk'][0]
         self.mul_scl_ipt = ['', 'add', 'cat'][2]
-
+        
         self.squeeze_block = ['', 'BasicDecBlk_x1', 'ResBlk_x4', 'ASPP_x3', 'ASPPDeformable_x3'][1]
         self.auxiliary_classification = False
         self.locate_head = False
@@ -98,38 +114,64 @@ class Config():
         self.progressive_ref = self.refine and True
         self.ender = self.progressive_ref and False
         self.freeze_bb = False
-
-        self.bb = [
-            'vgg16', 'vgg16bn', 'resnet50',  # 0, 1, 2
-            'pvt_v2_b2', 'pvt_v2_b5',  # 3-bs10, 4-bs5
-            'swin_v1_b', 'swin_v1_l',  # 5-bs9, 6-bs6
-            'swin_v1_t', 'swin_v1_s',  # 7, 8
-            'pvt_v2_b0', 'pvt_v2_b1',  # 9, 10
-        ][7]
+        
+        self.bb = [ # BiRefNet's backbones
+            'pvt_v2_b2', 'pvt_v2_b5',  # 0-bs10, 1-bs5
+            'swin_v1_b', 'swin_v1_l',  # 2-bs9, 3-bs6
+            'swin_v1_t', 'swin_v1_s',  # 4, 5
+            'pvt_v2_b0', 'pvt_v2_b1',  # 6, 7
+        ][4]
         self.lateral_channels_in_collection = {
-            'vgg16': [512, 256, 128, 64], 'vgg16bn': [512, 256, 128, 64], 'resnet50': [1024, 512, 256, 64],
             'pvt_v2_b2': [512, 320, 128, 64], 'pvt_v2_b5': [512, 320, 128, 64],
             'swin_v1_b': [1024, 512, 256, 128], 'swin_v1_l': [1536, 768, 384, 192],
             'swin_v1_t': [768, 384, 192, 96], 'swin_v1_s': [768, 384, 192, 96],
             'pvt_v2_b0': [256, 160, 64, 32], 'pvt_v2_b1': [512, 320, 128, 64],
         }[self.bb]
-
+        
         self.dec_channels_inter = ['fixed', 'adap'][0]
-        self.dec_att = ['', 'ASPP', 'ASPPDeformable'][1]
+        self.dec_att = ['', 'ASPP', 'ASPPDeformable'][1]  # ASPPDeformable has some error in module dcnv2
 
         if self.mul_scl_ipt == 'cat':
             self.lateral_channels_in_collection = [channel * 2 for channel in self.lateral_channels_in_collection]
 
         self.cxt_num = [0, 3][1]  # multi-scale skip connections from encoder
         self.cxt = self.lateral_channels_in_collection[1:][::-1][-self.cxt_num:] if self.cxt_num else []
-
-        self.weights = {
-            'swin_v1_t': '../saved_model/birefnet/swin_tiny_patch4_window7_224_22kto1k_finetune.pth',
+        # UDUN settings
+        self.bu = 'resnet50' # UDUN's backbone
+        self.save_ratio = 0.75 # save the last 25% epochs
+        # ISNet settings
+        self.lambdas_isnet = {
+            'bce': 1 * 1,
         }
+        self.early_stop = 5
+        self.interm_sup = True # Trun on to activate intermediate feature supervision
+        # MVANet settings
+        self.mva_bb = [
+            'swin_v1_b', 'swin_v1_l',  # 0, 1
+            'swin_v1_t', 'swin_v1_s',  # 2, 3
+        ][0]
+        self.mva_lateral_channels_in_collection = {
+            'swin_v1_b': [1024, 512, 256, 128], 'swin_v1_l': [1536, 768, 384, 192],
+            'swin_v1_t': [768, 384, 192, 96], 'swin_v1_s': [768, 384, 192, 96],
+        }[self.mva_bb]
+        self.lambdas_mvanet = {
+            'structure': 1 * 1
+        }
+        self.decay_epochs = 60
+        self.decay_rate = 0.9 # After 60 epochs, the learning rate starts to dacay by multiplying it by 0.9 each epoch 
 
-        run_sh_file = [f for f in os.listdir('.') if 'train.sh' == f] + [os.path.join('..', f) for f in os.listdir('..')
-                                                                         if 'train.sh' == f]
-        with open(run_sh_file[0], 'r', encoding='utf-8') as f:
-            lines = f.readlines()
-            self.save_last = int([l.strip() for l in lines if 'val_last=' in l][0].split('=')[-1])
-            self.save_step = int([l.strip() for l in lines if 'step=' in l][0].split('=')[-1])
+
+# Return task for choosing settings in shell scripts.
+if __name__ == '__main__':
+    import argparse
+
+
+    parser = argparse.ArgumentParser(description='Only choose one argument to activate.')
+    parser.add_argument('--print_task', action='store_true', help='print task name')
+    parser.add_argument('--print_testsets', action='store_true', help='print validation set')
+    args = parser.parse_args()
+
+    config = Config()
+    for arg_name, arg_value in args._get_kwargs():
+        if arg_value:
+            print(config.__getattribute__(arg_name[len('print_'):]))

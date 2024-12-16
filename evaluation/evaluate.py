@@ -34,7 +34,6 @@ def evaluate(pred_dir, method, testset, only_S_MAE=False, epoch=0):
             gt_paths=gt_paths[:],
             pred_paths=pred_paths[:],
             metrics=['S', 'MAE', 'E', 'F', 'HCE'][:10 * (not only_S_MAE) + 2],  # , 'WF'
-            verbose=config.verbose_eval,
         )
         e_max, e_mean, e_adp = em['curve'].max(), em['curve'].mean(), em['adp'].mean()
         f_max, f_mean, f_wfm, f_adp = fm['curve'].max(), fm['curve'].mean(), wfm, fm['adp']

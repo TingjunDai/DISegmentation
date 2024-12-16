@@ -1,0 +1,18 @@
+jittor==1.3.9.13
+numpy<2
+opencv-python
+scipy
+scikit-image
+tqdm
+prettytable
+# Run the following code to successfully install Jittor and enable CUDA.
+# # python3.7 -m jittor.test.test_example
+# # replace this var with your nvcc location 
+# export nvcc_path="/usr/local/cuda/bin/nvcc" 
+# # run a simple cuda test
+# python3.7 -m jittor.test.test_cuda 
+# openmpi-bin 
+# openmpi-common 
+# libopenmpi-dev
+# install those for muti-GPU training
+# don't forget to export mpicc_path=/you/mpicc/path

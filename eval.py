@@ -47,7 +47,6 @@ def do_eval(opt):
                 gt_paths=gt_paths,
                 pred_paths=pred_paths,
                 metrics=opt.metrics.split('+'),
-                verbose=config.verbose_eval
             )
             if config.task == 'DIS5K':
                 scores = [
@@ -92,36 +91,33 @@ if __name__ == '__main__':
         default=os.path.join(config.data_root_dir, config.task))
     parser.add_argument(
         '--pred_root', type=str, help='prediction root',
-        default='../inference')
+        default='e_udun')
     parser.add_argument(
         '--data_lst', type=str, help='test dataset',
-        default={
-            'DIS5K': '+'.join(['DIS-VD', 'DIS-TE1', 'DIS-TE2', 'DIS-TE3', 'DIS-TE4'][:]),
-            'COD': '+'.join(['TE-COD10K', 'NC4K', 'TE-CAMO', 'CHAMELEON'][:]),
-            'HRSOD': '+'.join(['DAVIS-S', 'TE-HRSOD', 'TE-UHRSD', 'TE-DUTS', 'DUT-OMRON'][:])
-        }[config.task])
+        default=config.testsets.replace(',', '+'))
     parser.add_argument(
         '--save_dir', type=str, help='candidate competitors',
-        default='eval_result')
+        default='e_results')
     parser.add_argument(
         '--check_integrity', type=bool, help='whether to check the file integrity',
         default=True)
     parser.add_argument(
         '--metrics', type=str, help='candidate competitors',
         default='+'.join(['S', 'MAE', 'E', 'F', 'WF', 'HCE'][:100 if config.task == 'DIS5K' else -1]))
-    opt = parser.parse_args()
+    args = parser.parse_args()
 
-    os.makedirs(opt.save_dir, exist_ok=True)
-    opt.model_lst = [config.eval_model]
-    # opt.model_lst = [m for m in sorted(os.listdir(opt.pred_root), key=lambda x: int(x.split('ep')[-1]), reverse=True) if
-    #                 int(m.split('ep')[-1]) % 1 == 0]
+    os.makedirs(args.save_dir, exist_ok=True)
+    try:
+        args.model_lst = [m for m in sorted(os.listdir(args.pred_root), key=lambda x: int(x.split('ep')[-1]), reverse=False) if int(m.split('ep')[-1]) % 1 == 0]
+    except:
+        args.model_lst = [m for m in sorted(os.listdir(args.pred_root))]
 
     # check the integrity of each candidates
-    if opt.check_integrity:
-        for _data_name in opt.data_lst.split('+'):
-            for _model_name in opt.model_lst:
-                gt_pth = os.path.join(opt.gt_root, _data_name, 'gt')
-                pred_pth = os.path.join(opt.pred_root, _model_name, _data_name)
+    if args.check_integrity:
+        for _data_name in args.data_lst.split('+'):
+            for _model_name in args.model_lst:
+                gt_pth = os.path.join(args.gt_root, _data_name, 'gt')
+                pred_pth = os.path.join(args.pred_root, _model_name, _data_name)
                 if not sorted(os.listdir(gt_pth)) == sorted(os.listdir(pred_pth)):
                     print(len(sorted(os.listdir(gt_pth))), len(sorted(os.listdir(pred_pth))))
                     print('The {} Dataset of {} Model is not matching to the ground-truth'.format(_data_name,
@@ -130,4 +126,4 @@ if __name__ == '__main__':
         print('>>> skip check the integrity of each candidates')
 
     # start engine
-    do_eval(opt)
+    do_eval(args)

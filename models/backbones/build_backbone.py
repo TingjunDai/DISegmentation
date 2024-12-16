@@ -1,6 +1,7 @@
 import jittor as jt
 from jittor import nn
 from models.backbones.swin_v1 import swin_v1_t, swin_v1_s, swin_v1_b, swin_v1_l
+from models.backbones.resnet50 import resnet50
 from config import Config
 
 config = Config()
@@ -14,7 +15,7 @@ def build_backbone(bb_name, pretrained=True, params_settings=''):
 
 
 def load_weights(model, model_name):
-    save_model = jt.load(config.weights[model_name])
+    save_model = jt.load(config.backbone_weights[model_name])
     model_dict = model.state_dict()
     state_dict = {k: v if v.size() == model_dict[k].size() else model_dict[k] for k, v in save_model.items() if
                   k in model_dict.keys()}

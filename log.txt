@@ -1,4 +1,0 @@
-2024-05-22 06:09:20,081 INFO Optimizer details:
-2024-05-22 06:09:20,081 INFO <jittor.optim.SGD object at 0x000002088B44AE20>
-2024-05-22 06:09:20,081 INFO Scheduler details:
-2024-05-22 06:09:20,081 INFO <jittor.lr_scheduler.MultiStepLR object at 0x000002088B476970>

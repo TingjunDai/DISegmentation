@@ -4,6 +4,7 @@ from jittor import nn
 import numpy as np
 from jittor.nn import DropPath
 from jittor.init import trunc_normal_
+from config import Config
 
 
 def to_2tuple(x):
@@ -275,6 +276,7 @@ class SwinTransformer(nn.Module):
             depths = [2, 2, 6, 2]
         if num_heads is None:
             num_heads = [3, 6, 12, 24]
+        self.config = Config()
         self.pretrain_img_size = pretrain_img_size
         self.num_layers = len(depths)
         self.embed_dim = embed_dim
@@ -339,7 +341,12 @@ class SwinTransformer(nn.Module):
         if self.ape:
             absolute_pos_embed = jt.nn.interpolate(self.absolute_pos_embed, size=(Wh, Ww), mode='bicubic')
             x = (x + absolute_pos_embed)
-        outs = []
+        if self.config.model == 'BiRefNet':
+            outs = []
+        elif self.config.model == 'MVANet':
+            outs = [x.contiguous()]
+        else:
+            outs = []
         x = x.flatten(start_dim=2).transpose(1, 2)
         x = self.pos_drop(x)
         for i in range(self.num_layers):

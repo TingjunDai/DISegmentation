@@ -5,6 +5,27 @@ import random
 import cv2
 from PIL import Image
 from jittor.transform import ToPILImage
+from config import Config
+import jittor as jt
+
+config = Config()
+
+
+def path_to_image(path, size=(1024, 1024), color_type=['rgb', 'gray'][0]):
+    if color_type.lower() == 'rgb':
+        image = cv2.imread(path)
+    elif color_type.lower() == 'gray':
+        image = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    else:
+        print('Select the color_type to return, either to RGB or gray image.')
+        return
+    if size:
+        image = cv2.resize(image, size, interpolation=cv2.INTER_LINEAR)
+    if color_type.lower() == 'rgb':
+        image = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB)).convert('RGB')
+    else:
+        image = Image.fromarray(image).convert('L')
+    return image
 
 
 class Logger():
@@ -48,6 +69,11 @@ class AverageMeter(object):
 
 def save_tensor_img(tenor_im, path):
     im = tenor_im.clone()
+    im = im.squeeze(0)
+    im = im.squeeze(0)
+    ma = jt.max(im)
+    mi = jt.min(im)
+    im = (im - mi) / (ma - mi) * 255
     tensor2pil = ToPILImage()
     im = tensor2pil(im)
     im = im.convert('L')
@@ -99,4 +125,4 @@ def split_head_and_base(net):
 
 
 if __name__ == '__main__':
-    split_map('../../DIS5K/DIS5K/DIS-TR')
+    split_map(os.path.join(config.data_root_dir, config.task, config.training_set))
