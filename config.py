@@ -34,7 +34,7 @@ class Config():
         }[self.task]
         
         # MODEL settings
-        self.model = ['ISNet', 'UDUN', 'BiRefNet', 'ISNet_GTEncoder', 'MVANet'][2]
+        self.model = ['ISNet', 'UDUN', 'BiRefNet', 'ISNet_GTEncoder', 'MVANet'][1]
         
         # TRAIN settings
         self.batch_size = 1  # MVANet' batch size can only be 1
@@ -54,7 +54,7 @@ class Config():
         }[self.model] # learning rate
         self.lr_decay_epochs = [1e4]  # Set to negative N to decay the lr in the last N-th epoch.
         self.lr_decay_rate = 0.5
-        self.size = (512, 512)  # input size
+        self.size = (1024, 1024)  # input size
         self.preproc_methods = ['enhance', 'rotate', 'pepper', 'flip', 'crop'][:3] # data enhance method
         self.load_all = False  # Turn it on/off by your case. It may consume a lot of CPU memory but accelerate train by loading whole dataset at once
         
@@ -115,7 +115,7 @@ class Config():
         self.ender = self.progressive_ref and False
         self.freeze_bb = False
         
-        self.bb = [ # BiRefNet's backbones
+        self.birefnet_bb = [ # Backbones supported by BiRefNet
             'pvt_v2_b2', 'pvt_v2_b5',  # 0-bs10, 1-bs5
             'swin_v1_b', 'swin_v1_l',  # 2-bs9, 3-bs6
             'swin_v1_t', 'swin_v1_s',  # 4, 5
@@ -137,16 +137,16 @@ class Config():
         self.cxt_num = [0, 3][1]  # multi-scale skip connections from encoder
         self.cxt = self.lateral_channels_in_collection[1:][::-1][-self.cxt_num:] if self.cxt_num else []
         # UDUN settings
-        self.bu = 'resnet50' # UDUN's backbone
+        self.bu = 'resnet50' # Backbones supported by UDUN
         self.save_ratio = 0.75 # save the last 25% epochs
         # ISNet settings
         self.lambdas_isnet = {
             'bce': 1 * 1,
         }
-        self.early_stop = 5
-        self.interm_sup = True # Trun on to activate intermediate feature supervision
+        self.early_stop = 5  # if the model's performance does not improve within 5 epochs, terminate it
+        self.interm_sup = True # Trun on to activate intermediate feature supervision 
         # MVANet settings
-        self.mva_bb = [
+        self.mva_bb = [ # Backbones supported by MVANet
             'swin_v1_b', 'swin_v1_l',  # 0, 1
             'swin_v1_t', 'swin_v1_s',  # 2, 3
         ][0]

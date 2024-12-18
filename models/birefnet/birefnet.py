@@ -19,7 +19,7 @@ class BiRefNet(nn.Module):
         super(BiRefNet, self).__init__()
         self.config = Config()
         self.epoch = 1
-        self.bb = build_backbone(self.config.bb, pretrained=bb_pretrained)
+        self.bb = build_backbone(self.config.birefnet_bb, pretrained=bb_pretrained)
         channels = self.config.lateral_channels_in_collection
         if self.config.auxiliary_classification:
             self.avgpool = nn.AdaptiveAvgPool2d((1, 1))

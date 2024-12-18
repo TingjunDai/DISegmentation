@@ -73,10 +73,52 @@ First, select the desired model, dataset, file paths, and other basic settings i
 ```python
 # Train & Test & Evaluation
 ./train_test.sh METHOD_NAME GPU_NUMBERS_FOR_TRAINING GPU_NUMBERS_FOR_TEST
-# Example: ./train_test.sh BiRefNet 0,1,2,3,4,5,6,7 0
-
-# See train.sh / test.sh for only training / test-evaluation.
+# Example: setsid nohup ./train_test.sh BiRefNet 0,1,2,3,4,5,6,7 0 $>nohup.log $
+# See train.sh / test.sh for only training / inference-evaluation.
 ```
+
+#### Fastest way to train a model
+
+All the following code can be modified in the `config.py` file.
+
+```python
+# For ISNet                      
+# First, switch the model to 'ISNet_GTEncoder', then train it to obtain the weight file with fmeasure > 0.99. 
+self.model = ['ISNet', 'UDUN', 'BiRefNet', 'ISNet_GTEncoder', 'MVANet'][3]
+# Replace the 'gt_encoder' in backbone_weights with the path to the weight file, and then switch the model to 'ISNet' for training.
+self.backbone_weights = {
+    …
+    'gt_encoder' = 'path'
+}
+self.model = ['ISNet', 'UDUN', 'BiRefNet', 'ISNet_GTEncoder', 'MVANet'][0]
+
+# For UDUN
+# Switch the model to 'UDUN', then replace the 'resnet50' in backbone_weights with the path to the weight file, and then start training.
+self.backbone_weights = {
+    …
+    'resnet50' = 'path'
+}
+
+# For BiRefNet
+# Switch the model to 'BiRefNet', BiRefNet supports all backbone networks from 'swin_v1_t' to 'swin_v1_l' and others. Simply change the 'birefnet_bb' to the corresponding network. Don't forget to create the corresponding weight paths in 'backbone_weights'.
+self.birefnet_bb = [ # Backbones supported by BiRefNet
+            'pvt_v2_b2', 'pvt_v2_b5',  # 0-bs10, 1-bs5
+            'swin_v1_b', 'swin_v1_l',  # 2-bs9, 3-bs6
+            'swin_v1_t', 'swin_v1_s',  # 4, 5
+            'pvt_v2_b0', 'pvt_v2_b1',  # 6, 7
+        ][4]
+
+# For MVANet
+# Switch the model to 'MVANet', MVANet also supports all backbone networks from 'swin_v1_t' to 'swin_v1_l'. Simply change the 'mva_bb' to the corresponding network. Don't forget to create the corresponding weight paths in 'backbone_weights'.
+self.mva_bb = [ # Backbones supported by MVANet
+            'swin_v1_b', 'swin_v1_l',  # 0, 1
+            'swin_v1_t', 'swin_v1_s',  # 2, 3
+        ][0]
+
+# To be continued
+```
+
+
 
 #### To do
 

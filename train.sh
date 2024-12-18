@@ -20,14 +20,12 @@ echo Training started at $(date)
 if [ ${to_be_distributed} == "True" ]; then
     echo "Multi-GPU mode received..."
     CUDA_VISIBLE_DEVICES=${devices} \
-    setsid nohup mpirun -np ${nproc_per_node} --allow-run-as-root \
-    python train.py --ckpt_dir ckpt/${method} --epochs ${epochs} \
-        > nohup.log 2>&1 &
+    mpirun -np ${nproc_per_node} --allow-run-as-root \
+    python train.py --ckpt_dir ckpt/${method} --epochs ${epochs}
 else
     echo "Single-GPU mode received..."
     CUDA_VISIBLE_DEVICES=${devices} \
-    setsid nohup python train.py --ckpt_dir ckpt/${method} --epochs ${epochs} \
-        > nohup.log 2>&1 &
+    python train.py --ckpt_dir ckpt/${method} --epochs ${epochs}
 fi
 
 echo Training finished at $(date)
