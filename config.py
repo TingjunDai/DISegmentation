@@ -126,7 +126,7 @@ class Config():
             'swin_v1_b': [1024, 512, 256, 128], 'swin_v1_l': [1536, 768, 384, 192],
             'swin_v1_t': [768, 384, 192, 96], 'swin_v1_s': [768, 384, 192, 96],
             'pvt_v2_b0': [256, 160, 64, 32], 'pvt_v2_b1': [512, 320, 128, 64],
-        }[self.bb]
+        }[self.birefnet_bb]
         
         self.dec_channels_inter = ['fixed', 'adap'][0]
         self.dec_att = ['', 'ASPP', 'ASPPDeformable'][1]  # ASPPDeformable has some error in module dcnv2
