@@ -57,7 +57,7 @@ class BiRefNet(nn.Module):
         return jt.array(laplacian_features)
 
     def forward_enc(self, x):
-        if self.config.bb in ['vgg16', 'vgg16bn', 'resnet50']:
+        if self.config.birefnet_bb in ['vgg16', 'vgg16bn', 'resnet50']:
             x1 = self.bb.conv1(x)
             x2 = self.bb.conv2(x1)
             x3 = self.bb.conv3(x2)
