@@ -19,7 +19,7 @@ class BiRefNet(nn.Module):
         super(BiRefNet, self).__init__()
         self.config = Config()
         self.epoch = 1
-        self.bb = build_backbone(self.config.birefnet_bb, pretrained=bb_pretrained)
+        self.bb = build_backbone(self.config.birefnet_bb, pretrained=bb_pretrained, params_settings="model='BiRefNet'")
         channels = self.config.lateral_channels_in_collection
         if self.config.auxiliary_classification:
             self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
@@ -57,7 +57,7 @@ class BiRefNet(nn.Module):
         return jt.array(laplacian_features)
 
     def forward_enc(self, x):
-        if self.config.bb in ['vgg16', 'vgg16bn', 'resnet50']:
+        if self.config.birefnet_bb in ['vgg16', 'vgg16bn', 'resnet50']:
             x1 = self.bb.conv1(x)
             x2 = self.bb.conv2(x1)
             x3 = self.bb.conv3(x2)

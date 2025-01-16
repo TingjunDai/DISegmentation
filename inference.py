@@ -62,20 +62,21 @@ def main(args):
     elif config.model == 'MVANet':
         model = MVANet(bb_pretrained=False)
     weights_lst = sorted(
-        glob(os.path.join(args.ckpt_folder, '*.pkl')) if args.ckpt_folder else [args.ckpt],
-        key=lambda x: int(x.split('ep')[-1].split('.pkl')[0]),
+        glob(os.path.join(args.ckpt_folder, '*.pth')) if args.ckpt_folder else [args.ckpt],
+        key=lambda x: int(x.split('ep')[-1].split('.pth')[0]),
         reverse=True
     )
     for testset in args.testsets.split('+'):
         print('>>>> Testset: {}...'.format(testset))
         data_loader_test = get_data_loader(testset, batch_size=config.batch_size_valid, is_train=False)
         for weights in weights_lst:
-            if int(weights.strip('.pkl').split('ep')[-1]) % 1 != 0:
+            if int(weights.strip('.pth').split('ep')[-1]) % 1 != 0:
                 continue
             print('\tInferencing {}...'.format(weights))
             # model.load_state_dict(torch.load(weights, map_location='cpu'))
             state_dict = jt.load(weights)
-            # state_dict = check_state_dict(state_dict)
+            # if config.model == 'BiRefNet':
+            #     state_dict = check_state_dict(state_dict)
             # model.load_state_dict(state_dict)
             model_dict = model.state_dict()
             pretrained_dict = {k: v for k, v in state_dict.items() if k in model_dict}

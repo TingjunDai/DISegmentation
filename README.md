@@ -38,11 +38,24 @@ pip install openmpi-bin openmpi-common libopenmpi-dev
 
 #### Data Preparation
 
-Download [DIS5K](https://xuebinqin.github.io/dis/index.html) in its official page.
+Download [DIS5K](https://xuebinqin.github.io/dis/index.html) in its official page. The dataset structure is as follows:
+
+```python
+DATASET_ROOT/
+	├── DIS5K
+    	├── DIS-TR
+        	├──im
+            ├──gt
+        ├── DIS-VD
+        ├── DIS-TE1
+        ├── DIS-TE2
+        ├── DIS-TE3
+        ├── DIS-TE4
+```
 
 #### Weights Preparation
 
-Download [ISNet](https://github.com/xuebinqin/DIS), [UDUN](https://github.com/PJLallen/UDUN), [BiRefNet](https://github.com/ZhengPeng7/BiRefNet), [MVANet](https://github.com/qianyu-dlut/MVANet/) pretrained model and backbone weights in their official pages.
+Download [ISNet](https://github.com/xuebinqin/DIS), [UDUN](https://github.com/PJLallen/UDUN), [BiRefNet](https://github.com/ZhengPeng7/BiRefNet), [MVANet](https://github.com/qianyu-dlut/MVANet/) pretrained model and backbone weights in their official pages.(Jittor is fully compatible with .pth weight files, so the weight files from the above PyTorch code repository can all be used.)
 
 #### Project Structure
 
@@ -64,6 +77,7 @@ CODE_ROOT/
     	├── inference.py # Run For Inference
     	├── train.py # Run For Train
     	├── train.sh/test.sh/train_test.sh # Used for one-click training, inference, and evaluation.
+        ├── inference_one.ipynb # For inference on a small number of images.
 ```
 
 #### Run
@@ -73,7 +87,8 @@ First, select the desired model, dataset, file paths, and other basic settings i
 ```python
 # Train & Test & Evaluation
 ./train_test.sh METHOD_NAME GPU_NUMBERS_FOR_TRAINING GPU_NUMBERS_FOR_TEST
-# Example: setsid nohup ./train_test.sh BiRefNet 0,1,2,3,4,5,6,7 0 $>nohup.log $
+# Example: setsid nohup ./train_test.sh BiRefNet 0,1,2,3,4,5,6,7 0 $>nohup.log $ for multi-GPU training
+# or setsid nohup ./train_test.sh BiRefNet 0 0 $>nohup.log $ for single-GPU training
 # See train.sh / test.sh for only training / inference-evaluation.
 ```
 
@@ -93,11 +108,12 @@ self.backbone_weights = {
 self.model = ['ISNet', 'UDUN', 'BiRefNet', 'ISNet_GTEncoder', 'MVANet'][0]
 
 # For UDUN
-# Switch the model to 'UDUN', then replace the 'resnet50' in backbone_weights with the path to the weight file, and then start training.
+# Switch the model to 'UDUN', then replace the 'resnet50' in backbone_weights with the path to the weight file, then run 'utils.py' to load the auxiliary dataset required for model training, and then start training.
 self.backbone_weights = {
     …
     'resnet50' = 'path'
 }
+python utils.py  # Don't forget to run utils.py before start training. 
 
 # For BiRefNet
 # Switch the model to 'BiRefNet', BiRefNet supports all backbone networks from 'swin_v1_t' to 'swin_v1_l' and others. Simply change the 'birefnet_bb' to the corresponding network. Don't forget to create the corresponding weight paths in 'backbone_weights'.
@@ -114,11 +130,11 @@ self.mva_bb = [ # Backbones supported by MVANet
             'swin_v1_b', 'swin_v1_l',  # 0, 1
             'swin_v1_t', 'swin_v1_s',  # 2, 3
         ][0]
-
-# To be continued
 ```
 
+#### Inference a few images using different models
 
+If you only want to briefly understand the qualitative effects of different models, you can use `inference_one.ipynb` to perform inference on a small number of images. To make it easier for everyone to use, I have organized the weight files for four models([Google Drive](https://drive.google.com/drive/folders/16BrDCH8jdoLV98dENSxRaieyd6jNagHX?usp=sharing) or [Baidu Pan](https://pan.baidu.com/s/1jHjItfPcs7eMM-MktOsYoQ?pwd=9412)). You only need to download them and replace the `ckpt` folder, and the code will run without needing to adjust anything in `config.py`.
 
 #### To do
 

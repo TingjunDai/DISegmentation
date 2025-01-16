@@ -209,7 +209,7 @@ class MVANet(nn.Module):
     def __init__(self, bb_pretrained=True):
         super().__init__()
         self.config = Config()
-        self.backbone = build_backbone(self.config.mva_bb, pretrained=bb_pretrained)
+        self.backbone = build_backbone(self.config.mva_bb, pretrained=bb_pretrained, params_settings="model='MVANet'")
         channel = self.config.mva_lateral_channels_in_collection
         emb_dim = 128
         self.sideout5 = nn.Sequential(nn.Conv(emb_dim, 1, 3, padding=1))

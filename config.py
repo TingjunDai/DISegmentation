@@ -34,7 +34,7 @@ class Config():
         }[self.task]
         
         # MODEL settings
-        self.model = ['ISNet', 'UDUN', 'BiRefNet', 'ISNet_GTEncoder', 'MVANet'][1]
+        self.model = ['ISNet', 'UDUN', 'BiRefNet', 'ISNet_GTEncoder', 'MVANet'][2]
         
         # TRAIN settings
         self.batch_size = 1  # MVANet' batch size can only be 1
@@ -61,6 +61,7 @@ class Config():
         self.backbone_weights = { # dir you download the backbone_weights
             'swin_v1_t': '../backbone_weights/birefnet/swin_tiny_patch4_window7_224_22kto1k_finetune.pth',
             'swin_v1_b': '../backbone_weights/mvanet/swin_base_patch4_window12_384_22kto1k.pth',
+            'swin_v1_l': '',
             'resnet50': '../backbone_weights/udun/resnet50.pkl',
             'gt_encoder': '../backbone_weights/isnet/ep2.pkl'
         }
@@ -120,13 +121,13 @@ class Config():
             'swin_v1_b', 'swin_v1_l',  # 2-bs9, 3-bs6
             'swin_v1_t', 'swin_v1_s',  # 4, 5
             'pvt_v2_b0', 'pvt_v2_b1',  # 6, 7
-        ][4]
+        ][3]
         self.lateral_channels_in_collection = {
             'pvt_v2_b2': [512, 320, 128, 64], 'pvt_v2_b5': [512, 320, 128, 64],
             'swin_v1_b': [1024, 512, 256, 128], 'swin_v1_l': [1536, 768, 384, 192],
             'swin_v1_t': [768, 384, 192, 96], 'swin_v1_s': [768, 384, 192, 96],
             'pvt_v2_b0': [256, 160, 64, 32], 'pvt_v2_b1': [512, 320, 128, 64],
-        }[self.bb]
+        }[self.birefnet_bb]
         
         self.dec_channels_inter = ['fixed', 'adap'][0]
         self.dec_att = ['', 'ASPP', 'ASPPDeformable'][1]  # ASPPDeformable has some error in module dcnv2

@@ -270,13 +270,12 @@ class SwinTransformer(nn.Module):
     def __init__(self, pretrain_img_size=224, patch_size=4, in_channels=3, embed_dim=96, depths=None,
                  num_heads=None, window_size=7, mlp_ratio=4.0, qkv_bias=True, qk_scale=None, drop_rate=0.0,
                  attn_drop_rate=0.0, drop_path_rate=0.2, norm_layer=nn.LayerNorm, ape=False, patch_norm=True,
-                 out_indices=(0, 1, 2, 3), frozen_stages=(- 1), use_checkpoint=False):
+                 out_indices=(0, 1, 2, 3), frozen_stages=(- 1), use_checkpoint=False, model='MVANet'):
         super().__init__()
         if depths is None:
             depths = [2, 2, 6, 2]
         if num_heads is None:
             num_heads = [3, 6, 12, 24]
-        self.config = Config()
         self.pretrain_img_size = pretrain_img_size
         self.num_layers = len(depths)
         self.embed_dim = embed_dim
@@ -310,6 +309,7 @@ class SwinTransformer(nn.Module):
             layer_name = f'norm{i_layer}'
             self.add_module(layer_name, layer)
         self._freeze_stages()
+        self.model = model
 
     def _freeze_stages(self):
         if self.frozen_stages >= 0:
@@ -341,12 +341,12 @@ class SwinTransformer(nn.Module):
         if self.ape:
             absolute_pos_embed = jt.nn.interpolate(self.absolute_pos_embed, size=(Wh, Ww), mode='bicubic')
             x = (x + absolute_pos_embed)
-        if self.config.model == 'BiRefNet':
+        if self.model == 'BiRefNet':
             outs = []
-        elif self.config.model == 'MVANet':
+        elif self.model == 'MVANet':
             outs = [x.contiguous()]
         else:
-            outs = []
+            outs = [x.contiguous()]
         x = x.flatten(start_dim=2).transpose(1, 2)
         x = self.pos_drop(x)
         for i in range(self.num_layers):
@@ -364,21 +364,21 @@ class SwinTransformer(nn.Module):
         self._freeze_stages()
 
 
-def swin_v1_t():
-    model = SwinTransformer(embed_dim=96, depths=[2, 2, 6, 2], num_heads=[3, 6, 12, 24], window_size=7)
+def swin_v1_t(model=''):
+    model = SwinTransformer(embed_dim=96, depths=[2, 2, 6, 2], num_heads=[3, 6, 12, 24], window_size=7, model=model)
     return model
 
 
-def swin_v1_s():
-    model = SwinTransformer(embed_dim=96, depths=[2, 2, 18, 2], num_heads=[3, 6, 12, 24], window_size=7)
+def swin_v1_s(model=''):
+    model = SwinTransformer(embed_dim=96, depths=[2, 2, 18, 2], num_heads=[3, 6, 12, 24], window_size=7, model=model)
     return model
 
 
-def swin_v1_b():
-    model = SwinTransformer(embed_dim=128, depths=[2, 2, 18, 2], num_heads=[4, 8, 16, 32], window_size=12)
+def swin_v1_b(model=''):
+    model = SwinTransformer(embed_dim=128, depths=[2, 2, 18, 2], num_heads=[4, 8, 16, 32], window_size=12, model=model)
     return model
 
 
-def swin_v1_l():
-    model = SwinTransformer(embed_dim=192, depths=[2, 2, 18, 2], num_heads=[6, 12, 24, 48], window_size=12)
+def swin_v1_l(model=''):
+    model = SwinTransformer(embed_dim=192, depths=[2, 2, 18, 2], num_heads=[6, 12, 24, 48], window_size=12, model=model)
     return model
